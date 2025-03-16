@@ -1,5 +1,6 @@
 package com.myapp.myapp.models;
 
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import lombok.*;
@@ -10,8 +11,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
-    @Id  // MongoDB uses String ID (ObjectId)
-    private String id;
+        @Id  // MongoDB uses String ID (ObjectId)
+private ObjectId id;
 
     private String username;
     private String firstname;
