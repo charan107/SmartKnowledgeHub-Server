@@ -65,22 +65,23 @@
     </dependency>
 	<!-- JWT (JSON Web Token) -->
     <dependency>
-        <groupId>io.jsonwebtoken</groupId>
-        <artifactId>jjwt</artifactId>
-        <version>0.12.0</version>
-    </dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-api</artifactId>
+    <version>0.12.3</version>
+</dependency>
 <dependency>
     <groupId>io.jsonwebtoken</groupId>
     <artifactId>jjwt-impl</artifactId>
-    <version>0.12.0</version>
+    <version>0.12.3</version>
     <scope>runtime</scope>
 </dependency>
 <dependency>
     <groupId>io.jsonwebtoken</groupId>
     <artifactId>jjwt-jackson</artifactId>
-    <version>0.12.0</version>
+    <version>0.12.3</version>
     <scope>runtime</scope>
 </dependency>
+
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
@@ -116,6 +117,18 @@
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-data-mongodb</artifactId>
     <version>3.4.3</version>
+</dependency>
+<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-security -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+    <version>3.4.3</version>
+</dependency>
+<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
+<dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
+    <version>2.18.3</version>
 </dependency>
 
 	</dependencies>

@@ -1,7 +1,9 @@
 package com.myapp.myapp.Controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,7 +15,11 @@ import com.myapp.myapp.Exceptions.UserNotFoundException;
 import com.myapp.myapp.Exceptions.UsernameAlreadyExistsException;
 import com.myapp.myapp.Repository.UserRepository;
 import com.myapp.myapp.models.*;
-import com.myapp.myapp.dto.*;;
+import com.myapp.myapp.security.JwtUtil;
+
+
+import com.myapp.myapp.dto.*;
+import com.myapp.myapp.enums.EmailType;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -26,92 +32,92 @@ public class UserController {
     @Autowired
     private EmailService emailService;
 
-    private final UserRepository userRepository; // Ensure it's final to prevent null issues
+    private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
 
     @Autowired
-    public UserController(UserService userService, UserRepository userRepository) {
+    public UserController(UserService userService, UserRepository userRepository, JwtUtil jwtUtil) {
         this.userService = userService;
-        this.userRepository = userRepository; // Inject properly
+        this.userRepository = userRepository;
+        this.jwtUtil = jwtUtil;
     }
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody User user) {
         try {
-            // Register user (throws exception if username or email exists)
             userService.registerUser(user);
 
             // Send welcome email
-            emailService.sendEmail(
-                    user.getEmail(),
-                    "📚 Welcome to Smart Knowledge Hub – Your Gateway to Knowledge!",
-                    """
-                            We are delighted to have you as part of our reading community.
+              Map<String, String> placeholders = new HashMap<>();
+            placeholders.put("name", user.getUsername());
+            emailService.sendEmailForPurpose(user.getEmail(), EmailType.REGISTRATION, placeholders);
 
-                            With your new account, you can:
-                            ✅ Borrow books online & offline
-                            ✅ Track your borrowed & returned books
-                            ✅ Explore a vast collection of books & journals
-                            ✅ Receive updates on new arrivals and library events
-
-                            To get started, visit our website and explore the world of books!
-
-                            If you have any questions, feel free to contact our support team at [Library Email] or visit our help desk.
-
-                            📖 Happy Reading!
-                            **Smart Knowledge Hub Team**
-                            """
-            );
-
-            // ✅ Return structured JSON response for success
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(Map.of("status", 201, "message", "✅ User registered successfully! Welcome email sent. 🎉"));
 
         } catch (UsernameAlreadyExistsException | EmailAlreadyExistsException ex) {
-            // ❌ Return structured JSON error response
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Bad Request", ex.getMessage()));
-
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Internal Server Error",
                             "An unexpected error occurred while registering the user."));
         }
-    }@PostMapping("/login")
-public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
-    try {
-        String username = loginRequest.getUsername();
-        String password = loginRequest.getPassword();
-
-        if (username == null || password == null) {
-            return ResponseEntity.badRequest()
-                .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Bad Request", "Username and password are required"));
+    }
+    @PostMapping("/login")
+    public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
+        try {
+            if (loginRequest.getUsername() == null || loginRequest.getPassword() == null) {
+                return ResponseEntity.badRequest()
+                        .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Bad Request", "Username and password are required"));
+            }
+    
+            String token = userService.validateUserLogin(loginRequest.getUsername(), loginRequest.getPassword());
+    
+            // ✅ Send the token in the response instead of cookies
+            return ResponseEntity.ok(Map.of(
+                    "message", "Login successful",
+                    "username", loginRequest.getUsername(),
+                    "token", token // 🔥 Return token directly
+            ));
+    
+        } catch (UserNotFoundException | IncorrectPasswordException e) {    
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), "Unauthorized", e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Internal Server Error", "An unexpected error occurred"));
         }
+    }
+    
+    @GetMapping("/check-username")
+    public ResponseEntity<Map<String, Boolean>> checkUsernameAvailability(@RequestParam String username) {
+        boolean available = !userService.usernameExists(username);
+        return ResponseEntity.ok(Map.of("available", available));
+    }
 
-        User loggedInUser = userService.validateUserLogin(username, password);
+    // @GetMapping("/check-auth")
+    // public ResponseEntity<Map<String, User>> authenticateUser(
+    //         @CookieValue(value = "jwt", required = false) String token) throws UserNotFoundException {
+    //     User user = userService.getUserFromToken(token);
+    //     return ResponseEntity.ok(Map.of("user", user));
+    // }
+    @GetMapping("/{username}")
+public ResponseEntity<?> getUserByUsername(@PathVariable String username) {
+    // ✅ Fetch user details without requiring Authorization
+    Optional<User> user = userRepository.findByUsername(username);
 
-        return ResponseEntity.ok(Map.of(
-                "success", true,
-                "user", Map.of(
-                        "username", loggedInUser.getUsername(),
-                        "firstName", loggedInUser.getFirstname() != null ? loggedInUser.getFirstname() : "",
-                        "lastName", loggedInUser.getLastname() != null ? loggedInUser.getLastname() : "",
-                        "email", loggedInUser.getEmail() != null ? loggedInUser.getEmail() : "",
-                        "phone", loggedInUser.getNumber() != null ? loggedInUser.getNumber() : "",
-                        "dob", loggedInUser.getDob() != null ? loggedInUser.getDob() : ""
-                )
-        ));
-    } catch (UserNotFoundException | IncorrectPasswordException e) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), "Unauthorized", e.getMessage()));
-    } catch (Exception e) {
-        e.printStackTrace();
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Internal Server Error", "An unexpected error occurred"));
+    if (user.isPresent()) {
+        return ResponseEntity.ok(user.get()); // ✅ Return user directly
+    } else {
+        return ResponseEntity.status(404).body(Map.of("error", "User not found"));
     }
 }
-@GetMapping("/check-username")
-public ResponseEntity<Map<String, Boolean>> checkUsernameAvailability(@RequestParam String username) {
-    boolean available = !userService.usernameExists(username);
-    return ResponseEntity.ok(Map.of("available", available));
-}
+
+    @PutMapping("/update")
+    public ResponseEntity<User> updateUser(@RequestBody UserUpdateRequest request, @RequestParam String username) {
+        User updatedUser = userService.updateUserDetails(request,username);
+        return ResponseEntity.ok(updatedUser);
+    }
 }

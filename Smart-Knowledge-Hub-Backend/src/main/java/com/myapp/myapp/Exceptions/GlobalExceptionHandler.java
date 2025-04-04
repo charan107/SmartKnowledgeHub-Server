@@ -28,4 +28,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleIncorrectPassword(IncorrectPasswordException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.UNAUTHORIZED);
     }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<String> handleException(Exception ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.UNAUTHORIZED);
+    }
+
 }
