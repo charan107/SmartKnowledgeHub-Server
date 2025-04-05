@@ -32,4 +32,5 @@ public class UserDashboardController {
     public List<CompletedModel> getCompleted(@PathVariable String userId){
         return userDashboardService.getCompleted(userId);
     }
+    
 }
