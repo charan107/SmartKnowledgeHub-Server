@@ -28,8 +28,8 @@ public class BorrowingService {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private EmailService emailService; // Inject EmailService
+    // @Autowired
+    // private EmailService emailService; // Inject EmailService
 
     @Autowired
     private BookRepository bookRepository;
@@ -64,36 +64,36 @@ public class BorrowingService {
             // ...existing code...
 
             // 🎯 Fetch email from User table
-            User userEntity = userRepository.findById(userId)
-                    .orElseThrow(() -> new IllegalArgumentException("User with ID " + userId + " not found."));
-            String email = userEntity.getEmail();
-            if (email == null || email.isEmpty()) {
-                throw new IllegalArgumentException("Email not found for user with ID " + userId);
-            }
+            // User userEntity = userRepository.findById(userId)
+            //         .orElseThrow(() -> new IllegalArgumentException("User with ID " + userId + " not found."));
+            // String email = userEntity.getEmail();
+            // if (email == null || email.isEmpty()) {
+            //     throw new IllegalArgumentException("Email not found for user with ID " + userId);
+            // }
 
-            Book book = bookRepository.findById(bookId)
-                    .orElseThrow(() -> new IllegalArgumentException("Book with ID " + bookId + " not found."));
-            String bookTitle = book.getTitle();
-            // Create a map containing placeholders for the email
-            Map<String, String> emailPlaceholders = new HashMap<>();
-            emailPlaceholders.put("firstname", userEntity.getFirstname());
-            emailPlaceholders.put("lastname", userEntity.getLastname());
-            emailPlaceholders.put("bookTitle", bookTitle); // Assuming Borrowing has a getBookTitle()
-                                                           // method
+            // Book book = bookRepository.findById(bookId)
+            //         .orElseThrow(() -> new IllegalArgumentException("Book with ID " + bookId + " not found."));
+            // String bookTitle = book.getTitle();
+            // // Create a map containing placeholders for the email
+            // Map<String, String> emailPlaceholders = new HashMap<>();
+            // emailPlaceholders.put("firstname", userEntity.getFirstname());
+            // emailPlaceholders.put("lastname", userEntity.getLastname());
+            // emailPlaceholders.put("bookTitle", bookTitle); // Assuming Borrowing has a getBookTitle()
+            //                                                // method
 
-            // ...existing code...
+            // // ...existing code...
 
-            // Create a DateTimeFormatter for formatting the dates
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            // // Create a DateTimeFormatter for formatting the dates
+            // DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-            // Convert LocalDate to String using the formatter
-            emailPlaceholders.put("dueDate", borrowing.getDuedate().format(formatter));
-            emailPlaceholders.put("borrowDate", borrowing.getBorrowdate().format(formatter));
+            // // Convert LocalDate to String using the formatter
+            // emailPlaceholders.put("dueDate", borrowing.getDuedate().format(formatter));
+            // emailPlaceholders.put("borrowDate", borrowing.getBorrowdate().format(formatter));
 
-            // ...existing code...
+            // // ...existing code...
 
-            // Send the email with placeholders
-            emailService.sendEmailForPurpose(email, EmailType.BORROWED_BOOK, emailPlaceholders);
+            // // Send the email with placeholders
+            // emailService.sendEmailForPurpose(email, EmailType.BORROWED_BOOK, emailPlaceholders);
 
         } else {
             throw new IllegalArgumentException("User with ID " + userId + " not found.");

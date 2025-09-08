@@ -29,8 +29,8 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private EmailService emailService;
+    // @Autowired
+    // private EmailService emailService;
 
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
@@ -48,9 +48,9 @@ public class UserController {
             userService.registerUser(user);
 
             // Send welcome email
-              Map<String, String> placeholders = new HashMap<>();
-            placeholders.put("name", user.getUsername());
-            emailService.sendEmailForPurpose(user.getEmail(), EmailType.REGISTRATION, placeholders);
+            //   Map<String, String> placeholders = new HashMap<>();
+            // placeholders.put("name", user.getUsername());
+            // emailService.sendEmailForPurpose(user.getEmail(), EmailType.REGISTRATION, placeholders);
 
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(Map.of("status", 201, "message", "✅ User registered successfully! Welcome email sent. 🎉"));
